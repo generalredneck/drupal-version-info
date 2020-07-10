@@ -6,9 +6,10 @@ use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Installer\PackageEvents;
 use Composer\Package\Link;
+use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Plugin\PluginInterface;
 
-class Plugin implements PluginInterface
+class Plugin implements PluginInterface, EventSubscriberInterface
 {
 
     /**
