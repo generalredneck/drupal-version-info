@@ -4,6 +4,7 @@ namespace GeneralRedneck\DrupalVersionInfo;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\Installer\PackageEvents;
 use Composer\Package\Link;
 use Composer\Plugin\PluginInterface;
 
