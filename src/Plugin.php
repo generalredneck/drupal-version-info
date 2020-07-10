@@ -19,7 +19,6 @@ class Plugin implements PluginInterface, EventSubscriberInterface
      */
     public function activate(Composer $composer, IOInterface $io)
     {
-
     }
 
     /**
@@ -28,6 +27,28 @@ class Plugin implements PluginInterface, EventSubscriberInterface
      */
     public function postInstall(PackageEvent $event)
     {
+      $supported_types = ['drupal-module', 'drupal-theme'];
+      $io = $event->getIO();
+      $operation = $event->getOperation();
+      $package = $operation->getPackage();
+      $installation_source = $package->getInstallationSource();
+      $package_type = $package->getType();
+      if ($installation_source !== 'source') {
+        if ($io->isVerbose()) {
+          $io->write("<comment>GR-DVI: Library downloaded as dist is unsupported.</comment>");
+        }
+        return;
+      }
+      if (!in_array($package_type, $supported_types)) {
+        if ($io->isVerbose()) {
+          $io->write("<comment>GR-DVI: Library of unsupported type $package_type. Supporting only " . implode(', ',$supported_types). " types.</comment>");
+        }
+        return;
+      }
+      if ($io->isVerbose()) {
+        $io->write("<comment>GR-DVI: Supported Library of $package_type and downloaded as $installation_source.</comment>");
+      }
+
 
     }
 
