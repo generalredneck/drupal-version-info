@@ -18,6 +18,6 @@
         }
     },
     "extra": {
-        "class": "Generalredneck\\DrupalVersionInfo\\Plugin"
+        "class": "GeneralRedneck\\DrupalVersionInfo\\Plugin"
     }
 }
