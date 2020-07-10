@@ -16,5 +16,8 @@
         "psr-4": {
             "GeneralRedneck\\DrupalVersionInfo\\": "src"
         }
+    },
+    "extra": {
+        "class": "Generalredneck\\DrupalVersionInfo\\Plugin"
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace GeneralRedneck\DrupalVersionInfo\Plugin;
+namespace GeneralRedneck\DrupalVersionInfo;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
