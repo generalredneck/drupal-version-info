@@ -9,6 +9,7 @@ use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\Package\Link;
 use Composer\Plugin\PluginInterface;
+use Symfony\Component\Yaml\Yaml;
 
 class Plugin implements PluginInterface, EventSubscriberInterface
 {
@@ -39,6 +40,13 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         }
         return;
       }
+      $source_type = $package->getSourceType();
+      if ($source_type !== 'git' ) {
+        if ($io->isVerbose()) {
+          $io->write("<comment>GR-DVI:Supporting git only.</comment>");
+        }
+        return;
+      }
       if (!in_array($package_type, $supported_types)) {
         if ($io->isVerbose()) {
           $io->write("<comment>GR-DVI: Library of unsupported type $package_type. Supporting only " . implode(', ',$supported_types). " types.</comment>");
@@ -48,7 +56,15 @@ class Plugin implements PluginInterface, EventSubscriberInterface
       if ($io->isVerbose()) {
         $io->write("<comment>GR-DVI: Supported Library of $package_type and downloaded as $installation_source.</comment>");
       }
-      $this->InjectInfoFileMetadata()
+      $installation_manager = $event->getComposer()->getInstallationManager();
+      $install_path = rtrim($installation_manager->getInstaller($package->getType())->getInstallPath($package), '/');
+      $drupal_project_name = str_replace('drupal/', '', $package->getName());
+
+      $core_version = $this->grabDrupalCoreVersion($install_path);
+
+      $core_version_branch = $core_version . ".x-" . trim(str_replace('dev', '', $package->getVersion()), '-');
+      $version = $this->ComputerRebuildVersion($install_path, $core_version_branch);
+      $this->InjectInfoFileMetadata($install_path, $drupal_project_name, $version, 0);
 
     }
 
@@ -61,6 +77,20 @@ class Plugin implements PluginInterface, EventSubscriberInterface
             PackageEvents::POST_PACKAGE_INSTALL => array('postInstall', 10),
             PackageEvents::POST_PACKAGE_UPDATE => array('postInstall', 10),
         );
+    }
+
+    private function grabDrupalCoreVersion($project_dir) {
+      $yaml = TRUE;
+      $info_files = $this->scanDirectory($project_dir, '/.*\.info.yml$/');
+      if (empty($info_files)) {
+        $yaml = FALSE;
+        $info_files = $this->scanDirectory($project_dir, '/.*\.info$/');
+      }
+      if (empty($info_files)) {
+        return FALSE;
+      }
+      return $yaml ? "8" : "7";
+
     }
 
     private function InjectInfoFileMetadata($project_dir, $project_name, $version, $datestamp) {
@@ -144,7 +174,7 @@ private function scanDirectory($dir, $mask, $nomask = array('.', '..', 'CVS'), $
           $filename = "$dir/$file";
           $basename = basename($file);
           $name = substr($basename, 0, strrpos($basename, '.'));
-          $files[$$key] = new stdClass();
+          $files[$$key] = new \stdClass();
           $files[$$key]->filename = $filename;
           $files[$$key]->basename = $basename;
           $files[$$key]->name = $name;
