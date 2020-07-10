@@ -9,6 +9,16 @@ use Composer\Plugin\PluginInterface;
 
 class Plugin implements PluginInterface
 {
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     */
+    public function activate(Composer $composer, IOInterface $io)
+    {
+
+    }
+
     /**
      * @param PackageEvent $event
      * @throws \Exception
@@ -17,6 +27,7 @@ class Plugin implements PluginInterface
     {
 
     }
+
     /**
      * Returns an array of event names this subscriber wants to listen to.
      */
