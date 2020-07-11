@@ -9,10 +9,20 @@ use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\Package\Link;
 use Composer\Plugin\PluginInterface;
-use Symfony\Component\Yaml\Yaml;
-
+use Composer\Util\ProcessExecutor;
+use Symfony\Component\Process\Process;
 class Plugin implements PluginInterface, EventSubscriberInterface
 {
+
+    /**
+     * @var IOInterface $io
+     */
+    protected $io;
+
+    /**
+     * @var string $lastCommandOutput
+     */
+    protected $lastCommandOutput;
 
     /**
      * @param Composer $composer
@@ -20,6 +30,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
      */
     public function activate(Composer $composer, IOInterface $io)
     {
+      $this->io = $io;
     }
 
     /**
@@ -277,8 +288,8 @@ METADATA;
     $rebuild_version = '';
     $branch_preg = preg_quote($branch);
 
-    if (drush_shell_cd_and_exec($project_dir, 'git describe --tags')) {
-      $shell_output = drush_shell_exec_output();
+    if ($this->executeCommand('git -C %s describe --tags', $project_dir)) {
+      $shell_output = $this->getLastCommandOutput();
       $last_tag = $shell_output[0];
       // Make sure the tag starts as Drupal formatted (for eg.
       // 7.x-1.0-alpha1) and if we are on a proper branch (ie. not master)
@@ -299,4 +310,46 @@ METADATA;
     }
     return $rebuild_version;
   }
+
+    /**
+     * Executes a shell command with escaping.
+     *
+     * @param string $cmd
+     * @return bool
+     */
+    protected function executeCommand($cmd)
+    {
+        $io = $this->io;
+        // Shell-escape all arguments except the command.
+        $args = func_get_args();
+        foreach ($args as $index => $arg) {
+            if ($index > 0) {
+                $args[$index] = escapeshellarg($arg);
+            }
+        }
+
+        // And replace the arguments.
+        $command = call_user_func_array('sprintf', $args);
+        $output = '';
+        if ($io->isVerbose()) {
+            $io->write('<comment>' . $command . '</comment>');
+            $output = function ($type, $data) use ($io) {
+                if ($type === Process::ERR) {
+                    $io->write('<error>' . $data . '</error>');
+                } else {
+                    $io->write('<comment>' . $data . '</comment>');
+                }
+                $this->lastCommandOutput = $data;
+            };
+        }
+        $executor = new ProcessExecutor($io);
+        $exit_status = ($executor->execute($command, $output) === 0);
+        $this->lastCommandOutput = $executor->splitLines($this->lastCommandOutput);
+        return $exit_status;
+    }
+
+    protected function getLastCommandOutput() {
+      return $this->lastCommandOutput;
+    }
+
 }
