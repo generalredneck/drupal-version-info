@@ -335,15 +335,19 @@ METADATA;
         $output = '';
         if ($io->isVerbose()) {
             $io->write('<comment>' . $command . '</comment>');
-            $output = function ($type, $data) use ($io) {
-                if ($type === Process::ERR) {
+        }
+        $output = function ($type, $data) use ($io) {
+            $this->lastCommandOutput = $data;
+            if ($type === Process::ERR) {
+                if ($io->isVerbose()) {
                     $io->write('<error>' . $data . '</error>');
-                } else {
+                }
+            } else {
+                if ($io->isVerbose()) {
                     $io->write('<comment>' . $data . '</comment>');
                 }
-                $this->lastCommandOutput = $data;
-            };
-        }
+            }
+        };
         $executor = new ProcessExecutor($io);
         $exit_status = ($executor->execute($command, $output) === 0);
         $this->lastCommandOutput = $executor->splitLines($this->lastCommandOutput);
