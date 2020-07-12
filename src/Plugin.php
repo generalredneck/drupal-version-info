@@ -233,9 +233,11 @@ private function fileAppendData($file, $data) {
     $extra = "\nproject = \"$project_name\"";
   $date = date('Y-m-d', $datestamp);
   $info = <<<METADATA
-; Information added by drush on {$date}
+
+; Information added by drupal-version-info composer plugin on {$date}
 version = "{$version}"{$extra}
 datestamp = "{$datestamp}"
+
 METADATA;
   return $info;
 }
@@ -252,9 +254,11 @@ private function generateInfoYamlMetadata($version, $project_name, $datestamp) {
     $extra = "\nproject: '$project_name'";
   $date = date('Y-m-d', $datestamp);
   $info = <<<METADATA
-# Information added by drush on {$date}
+
+# Information added by drupal-version-info composer plugin on {$date}
 version: '{$version}'{$extra}
 datestamp: {$datestamp}
+
 METADATA;
   return $info;
 }
