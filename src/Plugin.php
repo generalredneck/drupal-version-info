@@ -74,9 +74,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface
       $core_version = $this->grabDrupalCoreVersion($install_path);
 
       $core_version_branch = $core_version . ".x-" . trim(str_replace('dev', '', $package->getVersion()), '-');
-      $version = $this->ComputerRebuildVersion($install_path, $core_version_branch);
-      $this->InjectInfoFileMetadata($install_path, $drupal_project_name, $version, 0);
-
+      $version = $this->ComputeRebuildVersion($install_path, $core_version_branch);
+      $this->executeCommand('git -C %s log -1 --pretty=format:%%ct', $install_path);
+      $output = $this->getLastCommandOutput();
+      $datestamp = array_shift($output);
+      $this->InjectInfoFileMetadata($install_path, $drupal_project_name, $version, $datestamp);
     }
 
     /**
@@ -284,9 +286,9 @@ METADATA;
    *
    * @see https://github.com/drush-ops/drush/blob/8.x/commands/pm/package_handler/git_drupalorg.inc
    */
-  private function ComputerRebuildVersion($project_dir, $branch) {
+  private function ComputeRebuildVersion($project_dir, $branch) {
     $rebuild_version = '';
-    $branch_preg = preg_quote($branch);
+    $branch_preg = preg_quote(rtrim($branch, '.x'));
 
     if ($this->executeCommand('git -C %s describe --tags', $project_dir)) {
       $shell_output = $this->getLastCommandOutput();
